@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import Link from "next/link";
 
 type Comment = {
@@ -31,7 +31,8 @@ type RelatedPost = {
   createdAt: string;
 };
 
-export default function SinglePostPage({ params }: { params: { slug: string } }) {
+export default function SinglePostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug: resolvedSlug } = use(params);
   const [post,         setPost]         = useState<Post | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading,      setLoading]      = useState(true);
@@ -46,12 +47,11 @@ export default function SinglePostPage({ params }: { params: { slug: string } })
 
   useEffect(() => {
     async function load() {
-      // First find the post by slug using the public posts API
-      const listRes = await fetch(`/api/posts?search=${params.slug}`);
+      const listRes = await fetch(`/api/posts?search=${resolvedSlug}`);
       const posts   = await listRes.json();
 
       // Find exact slug match
-      const found = posts.find((p: any) => p.slug === params.slug);
+      const found = posts.find((p: any) => p.slug === resolvedSlug);
       if (!found) { setNotFound(true); setLoading(false); return; }
 
       // Fetch full post with comments
@@ -71,7 +71,7 @@ export default function SinglePostPage({ params }: { params: { slug: string } })
       setLoading(false);
     }
     load();
-  }, [params.slug]);
+  }, [resolvedSlug]);
 
   async function handleCommentSubmit(e: React.FormEvent) {
     e.preventDefault();

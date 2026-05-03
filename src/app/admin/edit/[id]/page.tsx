@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 
 type Category = { id: string; name: string };
 
-export default function EditPostPage({ params }: { params: { id: string } }) {
+export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -24,7 +25,7 @@ export default function EditPostPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     async function load() {
       const [postRes, catRes] = await Promise.all([
-        fetch(`/api/posts/${params.id}`),
+        fetch(`/api/posts/${id}`),
         fetch("/api/categories"),
       ]);
 
@@ -42,14 +43,14 @@ export default function EditPostPage({ params }: { params: { id: string } }) {
       setLoading(false);
     }
     load();
-  }, [params.id]);
+  }, [id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError("");
 
-    const res = await fetch(`/api/posts/${params.id}`, {
+    const res = await fetch(`/api/posts/${id}`, {
       method:  "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, slug, excerpt, content, categoryId, published }),

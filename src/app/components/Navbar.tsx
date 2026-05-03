@@ -35,7 +35,7 @@ export default function Navbar() {
                 </Link>
               </li>
               {/* UserButton = Clerk's avatar + dropdown (logout, profile, etc.) */}
-              <li><UserButton afterSignOutUrl="/" /></li>
+              <li><UserButton /></li>
             </>
           ) : (
             <li>
@@ -75,7 +75,7 @@ export default function Navbar() {
           {isSignedIn ? (
             <>
               <Link href="/admin" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Dashboard</Link>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </>
           ) : (
             <Link href="/login" onClick={() => setMenuOpen(false)} className="w-fit px-4 py-2 bg-indigo-600 text-white rounded-lg">Login</Link>
