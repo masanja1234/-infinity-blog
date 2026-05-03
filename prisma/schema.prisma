@@ -1,0 +1,98 @@
+// Prisma Schema — defines all database tables and their relationships
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// USER — people who can log in as admins
+// ─────────────────────────────────────────
+model User {
+  id        String   @id @default(cuid())   // unique ID generated automatically
+  name      String
+  email     String   @unique               // no two users can share an email
+  password  String                         // hashed password (never store plain text)
+  role      Role     @default(AUTHOR)      // ADMIN can do everything, AUTHOR can write
+  createdAt DateTime @default(now())
+
+  // One user can write many posts
+  posts Post[]
+}
+
+// Role determines what a user is allowed to do
+enum Role {
+  ADMIN
+  AUTHOR
+}
+
+// ─────────────────────────────────────────
+// CATEGORY — topics like Finance, Technology
+// ─────────────────────────────────────────
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique              // e.g. "Finance"
+  slug      String   @unique              // e.g. "finance" — used in URLs
+  createdAt DateTime @default(now())
+
+  // One category can have many posts
+  posts Post[]
+}
+
+// ─────────────────────────────────────────
+// POST — a blog article
+// ─────────────────────────────────────────
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique            // used in URL: /blog/my-post-title
+  content     String                     // full article body
+  excerpt     String?                    // short summary shown on blog cards (optional)
+  coverImage  String?                    // URL of the post's cover photo (optional)
+  published   Boolean  @default(false)   // draft = false, live = true
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt        // auto-updates whenever the post is edited
+
+  // Each post belongs to one author (User)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+
+  // Each post belongs to one category
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  // One post can have many comments
+  comments    Comment[]
+}
+
+// ─────────────────────────────────────────
+// COMMENT — reader comments on a post
+// ─────────────────────────────────────────
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  authorName  String                     // commenter's name (no login required)
+  authorEmail String                     // commenter's email
+  createdAt   DateTime @default(now())
+
+  // Each comment belongs to one post
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  // onDelete: Cascade means if the post is deleted, all its comments are also deleted
+}
+
+// ─────────────────────────────────────────
+// CONTACT MESSAGE — from the contact form
+// ─────────────────────────────────────────
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  read      Boolean  @default(false)     // admin can mark as read
+  createdAt DateTime @default(now())
+}
